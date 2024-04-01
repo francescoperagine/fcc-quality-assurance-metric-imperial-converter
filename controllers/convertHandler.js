@@ -1,114 +1,101 @@
 const unitRegex = /[a-zA-Z]+$/;
+const doubleDivision = /\/.*\//;
+const invalidNumber = 'invalid number';
+const invalidUnit = 'invalid unit';
+
+const unitReturnMapping = {
+  'gal': 'L',
+  'L': 'gal',
+  'mi': 'km',
+  'km': 'mi',
+  'lbs': 'kg',
+  'kg': 'lbs',
+  'g': 'lbs',
+};
+
+const unitSpellOutMapping = {
+  'gal': 'gallons',
+  'L': 'L',
+  'mi': 'miles',
+  'km': 'kilometers',
+  'lbs': 'pounds',
+  'kg': 'kilograms',
+  'g': 'grams',
+};
+
+const galToL = 3.78541;
+const lbsToKg = 0.453592;
+const miToKm = 1.60934;
 
 function ConvertHandler() {
 
   this.getNum = function(input) {
     let result = input.replace(unitRegex, '').trim();
-    result = result === '' ? 1 : +convertToFloat(result);
+    if (result === '') {
+      result = 1;
+    } else if (input.match(doubleDivision)) {
+      result = invalidNumber;
+    } else {
+      result = +convertToFloat(result);
+    }
     return result;
   };
   
   this.getUnit = function(input) {
     input = input.trim();
-    let result = input.match(unitRegex);
-    const unitMapping = {
-      'gal': 'gallons',
-      'L': 'liters',
-      'mi': 'miles',
-      'km': 'kilometers',
-      'lbs': 'pounds',
-      'kg': 'kilograms',
-      'g': 'grams',
-    };
-    if(unitMapping.hasOwnProperty(result[0]) === false) {
-      throw new Error('invalid unit');
-    } else {
-      result = result[0];
+    let match = input.match(unitRegex);
+    let result = match[0];
+    result = result.toLowerCase();
+
+    if(result === "l") {
+      result = "L";
     }
-  
+    
+    if(!unitReturnMapping.hasOwnProperty(result)) {
+      result = invalidUnit;
+    }
     return result;
   };
   
   this.getReturnUnit = function(initUnit) {
-    const unitMapping = {
-      'gal': 'L',
-      'L': 'gal',
-      'mi': 'km',
-      'km': 'mi',
-      'lbs': 'kg',
-      'kg': 'lbs',
-      'g': 'lbs',
-    };
-;
-    if (unitMapping.hasOwnProperty(initUnit)) {
-      result = unitMapping[initUnit];
-    }
-    return result
+    return unitReturnMapping[initUnit];
   };
 
   this.spellOutUnit = function(unit) {
-    const unitMapping = {
-      'gal': 'gallons',
-      'L': 'liters',
-      'mi': 'miles',
-      'km': 'kilometers',
-      'lbs': 'pounds',
-      'kg': 'kilograms',
-      'g': 'grams',
-    };
-    if(unitMapping.hasOwnProperty(unit) === false) {
-      throw new Error('invalid unit');
-    } else {
-      result = unitMapping[unit];
-    }
-    return result;
-  };
-  
-  this.convert = function(initNum, initUnit) {
-    console.log("convert InitNum: " + initNum + " InitUnit: " + initUnit);
-    const galToL = 3.78541;
-    const lbsToKg = 0.453592;
-    const miToKm = 1.60934;
+    return unitSpellOutMapping[unit];
 
+  };
+    this.convert = function(initNum, initUnit) {
     let result;
 
-    const unitLowerCase = initUnit;
-    switch (unitLowerCase) {
+    switch (initUnit) {
       case "gal":
-        console.log("convert gal");
         result = initNum * galToL;
         break;
       case "lbs":
-        console.log("convert lbs");
         result = initNum * lbsToKg;
         break;
       case "mi":
-        console.log("convert mi");
         result = initNum * miToKm;
         break;
       case "L":
-        console.log("convert L");
         result = initNum / galToL;
         break;
       case "kg":
-        console.log("convert kg");
         result = initNum / lbsToKg;
         break;
       case "km":
-        console.log("convert km");
         result = initNum / miToKm;
         break;
       case "g":
-        console.log("convert g");
         result = initNum / 1000 / lbsToKg;
         break;
       default:
-        console.log("convert default");
         result = 0;
         break;
     }
 
-    return result;
+    return Math.round(result * 100000) / 100000;
   };
 
 function convertToFloat(input) {
@@ -120,7 +107,7 @@ function convertToFloat(input) {
     if(result.toString().includes("/")) {
       let fraction = result.split("/");
       if(fraction.length != 2) {
-        throw new Error('invalid number'); 
+        result = invalidNumber;
       } else {
         let firstNumber = Number.parseFloat(fraction[0]);
         let secondNumber = Number.parseFloat(fraction[1]);
@@ -128,22 +115,25 @@ function convertToFloat(input) {
         if(Number.isNaN(firstNumber) === false && Number.isNaN(secondNumber) === false) {
           result = eval(result);
         } else {
-          throw new Error('invalid number');
+          result = invalidNumber;
         }
       }
     }
 
     if (result === null || result === undefined) {
-      throw new Error('invalid number');
+      return invalidNumber;
     }
 
     return result;
 }
   
   this.getString = function(initNum, initUnit, returnNum, returnUnit) {
-    const resString =  `${initNum} ${initUnit} converts to ${returnNum} ${returnUnit}`;  
-    console.log("getString result: " + resString);
-    return resString;
+    spelloutInitUnit = this.spellOutUnit(initUnit);
+    spellOutResUnit = this.spellOutUnit(returnUnit);
+    if(initNum <= 1 && initUnit !== "L") {
+      spelloutInitUnit = spelloutInitUnit.slice(0, -1);
+    }
+    return `${initNum} ${spelloutInitUnit} converts to ${returnNum} ${spellOutResUnit}`;
   };
 }
 

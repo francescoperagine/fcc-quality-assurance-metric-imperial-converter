@@ -2,6 +2,8 @@ const chaiHttp = require('chai-http');
 const chai = require('chai');
 let assert = chai.assert;
 const server = require('../server');
+const invalidNumber ={ error: "invalid number" };
+const invalidNumberAndUnit = { error: "invalid number and unit" };
 
 chai.use(chaiHttp);
 
@@ -15,8 +17,8 @@ suite('Functional Tests', function() {
                 assert.equal(res.status, 200);
                 assert.equal(res.body.initNum, 10);
                 assert.equal(res.body.initUnit, 'L');
-                assert.equal(res.body.returnUnit, 'gal');
                 assert.approximately(res.body.returnNum, 2.64172, 0.1);
+                assert.equal(res.body.returnUnit, 'gal');
                 done();
         });
     });
@@ -42,8 +44,8 @@ suite('Functional Tests', function() {
             .get('/api/convert')
             .query({input: '3/7.2/4kg'})
             .end(function (err, res) {
-                assert.equal(res.status, 500);
-                assert.isEmpty(res.body); 
+                assert.equal(res.status, 200);
+                assert.deepEqual(res.body, invalidNumber); 
                 done();
         });
     });
@@ -54,8 +56,8 @@ suite('Functional Tests', function() {
             .get('/api/convert')
             .query({input: '3/7.2/4kilomegagram'})
             .end(function (err, res) {
-                assert.equal(res.status, 500);
-                assert.isEmpty(res.body); 
+                assert.equal(res.status, 200);
+                assert.deepEqual(res.body, invalidNumberAndUnit);
                 done();
         });
     });
